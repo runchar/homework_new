@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <conio.h>
 #include <time.h>
+#include<string>
+#include<cstring>
 #define	 W	1200
 #define  H  600
 
@@ -22,6 +24,7 @@ struct zombie {
 	int hp;
 	int att;
 	int state;                           //行走，吃，死掉
+	unsigned int fps;
 };
 IMAGE ima_bg;									//背景
 IMAGE ima_p_1;							//植物：豌豆射手
@@ -34,6 +37,8 @@ int zombie_num;
 zombie a[10001];
 zombie z0;
 unsigned int fps;
+unsigned int fps_z;
+unsigned long long time_c;
 
 
 void drawAlpha(IMAGE* picture, int  picture_x, int picture_y) //x为载入图片的X坐标，y为Y坐标  //这一段是从网上找的
@@ -136,12 +141,37 @@ void start_up()
 	char name[128];
 	initialize();
 	initgraph(W, H);												//确定窗口大小
-	//for (int i = 0; i <= 20; i++)
-	//{
-	//	loadimage(&ima_z_1[i], _T("res\\Zombies\\Zombie\\0.png"),i);
-	//	//loadimage(&ima_z_1[1], _T("res\\Zombies\\Zombie\\1.gif"));
+	//char file[255] = { 0 }; 
+	//char  file_add[255] = "res\\Zombies\\Zombie\\";
+	//int ag={0,1,2,3,4,5,6,7,8,9,10,11,12,}
+	//string s = "res\\Zombies\\Zombie\\ % c.png";
+	//for (int i = 0; i <= 21; i++)
+	{
+		//file_add[22] = i + '0';
+		//strcpy(file_add + 22, ".png");
+		//loadimage(&ima_z_1[i], (LPCTSTR)file_add);
+		loadimage(&ima_z_1[1], _T("res\\Zombies\\Zombie\\1.png"));
+		loadimage(&ima_z_1[2], _T("res\\Zombies\\Zombie\\2.png"));
+		loadimage(&ima_z_1[3], _T("res\\Zombies\\Zombie\\3.png"));
+		loadimage(&ima_z_1[4], _T("res\\Zombies\\Zombie\\4.png"));
+		loadimage(&ima_z_1[5], _T("res\\Zombies\\Zombie\\5.png"));
+		loadimage(&ima_z_1[6], _T("res\\Zombies\\Zombie\\6.png"));
+		loadimage(&ima_z_1[7], _T("res\\Zombies\\Zombie\\7.png"));
+		loadimage(&ima_z_1[8], _T("res\\Zombies\\Zombie\\8.png"));
+		loadimage(&ima_z_1[9], _T("res\\Zombies\\Zombie\\9.png"));
+		loadimage(&ima_z_1[10], _T("res\\Zombies\\Zombie\\10.png"));
+		loadimage(&ima_z_1[11], _T("res\\Zombies\\Zombie\\11.png"));
+		loadimage(&ima_z_1[12], _T("res\\Zombies\\Zombie\\12.png"));
+		loadimage(&ima_z_1[13], _T("res\\Zombies\\Zombie\\13.png"));
+		loadimage(&ima_z_1[14], _T("res\\Zombies\\Zombie\\14.png"));
+		loadimage(&ima_z_1[15], _T("res\\Zombies\\Zombie\\15.png"));
+		loadimage(&ima_z_1[16], _T("res\\Zombies\\Zombie\\16.png"));
+		loadimage(&ima_z_1[17], _T("res\\Zombies\\Zombie\\17.png"));
+		loadimage(&ima_z_1[18], _T("res\\Zombies\\Zombie\\18.png"));
+		loadimage(&ima_z_1[19], _T("res\\Zombies\\Zombie\\19.png"));
+		loadimage(&ima_z_1[20], _T("res\\Zombies\\Zombie\\20.png"));
 	//	//sprintf_s(name, sizeof(name), "res\\Plants\\Peashooter\\%d.gif", i-1);
-	//}
+	}
 	loadimage(&ima_z_1_0, _T("res\\Zombies\\Zombie\\0.gif"));
 	loadimage(&ima_bg, _T("res\\Map\\map0.jpg"));
 	loadimage(&ima_p_1, _T("res\\Plants\\Peashooter\\1.gif"));     //加载豌豆射手
@@ -216,14 +246,20 @@ void update_z()
 	{
 		if (a[i].state)
 		{
-			drawAlpha(ima_z_1, a[i].x, a[i].line * 100 - 53);
-			if (!(fps % 50))
+			drawAlpha(&ima_z_1[a[i].fps%20+1], a[i].x, a[i].line * 100 - 73);
+
+			if (!(fps % 100))
+				a[i].fps++;
+
+			if (!(fps % 100))
 				a[i].x -= 1;
-			if (a[i].x < 100)
+			if (a[i].x < 400)
 				a[i].state = 0;
 		}
 	}
-	fps++;
+	//if (GetTickCount() - time_c>10)
+		fps ++;
+	//time_c= GetTickCount();
 	//Sleep(50);
 }
 void update_p()
@@ -242,9 +278,10 @@ void update_p()
 
 void initialize()
 {
-	z0 = { 0,900,100,10,1 };
+	z0 = { 0,900,100,10,1,0};
 	mou_p = 0;
 	srand(time(NULL));												//初始化随机种子
+	time_c = GetTickCount();
 	//185 + 80 * j, 100 * i											//位置
 }
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
