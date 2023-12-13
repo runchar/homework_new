@@ -24,22 +24,35 @@ struct zombie {
 	int hp;
 	int att;
 	int state;                           //行走，吃，死掉
-	unsigned int fps;
+	unsigned int f;
 };
+
+struct bullet {
+	int line;
+	int x;
+	int f;
+	bool ex;
+};
+
 IMAGE ima_bg;									//背景
 IMAGE ima_p_1;							//植物：豌豆射手
 IMAGE ima_z_1[22];							//僵尸，normal
 IMAGE ima_z_1_0;
+IMAGE ima_s_1;
 MOUSEMSG mou;
 bool mou_p;
 plant_place loca_p[6][7];
 int zombie_num;
 zombie a[10001];
+bullet b[100001];
 zombie z0;
+plant_place p0;
 unsigned int fps;
 unsigned int fps_z;
 unsigned long long time_c;
-
+int bullet_num;
+int zombie_line[10];
+int zombie_line_num[10];
 
 void drawAlpha(IMAGE* picture, int  picture_x, int picture_y) //x为载入图片的X坐标，y为Y坐标  //这一段是从网上找的
 {
@@ -84,6 +97,7 @@ void update_with_input();
 void update_without();
 void update_p();
 void update_z();
+void update_c();
 int legal_m_x(int x)
 {
 	if (mou.x > 955 && (mou.x) < 1100)
@@ -108,6 +122,9 @@ int legal_m_y(int y)
 	if ((mou.y) >= 520)
 		return 520;
 }
+
+void update_shoot();
+
 bool judge(int location_judge)
 {
 	//rectangle(1100, 250, 1170, 350);  //  1: 拖动判定框
@@ -172,6 +189,7 @@ void start_up()
 		loadimage(&ima_z_1[20], _T("res\\Zombies\\Zombie\\20.png"));
 	//	//sprintf_s(name, sizeof(name), "res\\Plants\\Peashooter\\%d.gif", i-1);
 	}
+	loadimage(&ima_s_1, _T("res\\bullets\\PeaNormal\\PeaNormal_0.png"));
 	loadimage(&ima_z_1_0, _T("res\\Zombies\\Zombie\\0.gif"));
 	loadimage(&ima_bg, _T("res\\Map\\map0.jpg"));
 	loadimage(&ima_p_1, _T("res\\Plants\\Peashooter\\1.gif"));     //加载豌豆射手
@@ -207,14 +225,14 @@ void update_with_input()
 	{
 		putimage(0, 0, &ima_bg);
 		//Sleep(20);
-		for (int i = 1; i <= 5; i++)
-		{
-			for (int j = 1; j <= 6; j++)
-			{
-				if (loca_p[i][j].ex)
-					drawAlpha(&ima_p_1, 185 + 80 * j, 100 * i);  //植物边界
-			}
-		}
+		//for (int i = 1; i <= 5; i++)
+		//{
+		//	for (int j = 1; j <= 6; j++)
+		//	{
+		//		if (loca_p[i][j].ex)
+		//			drawAlpha(&ima_p_1, 185 + 80 * j, 100 * i);  //植物边界
+		//	}
+		//}
 		//Sleep(5);
 	}
 	rectangle(1100, 250, 1170, 350);
@@ -236,6 +254,7 @@ void update_without()
 	//Sleep(20);
 	update_p();
 	update_z();
+	update_c();
 }
 void update_z()
 {
@@ -246,15 +265,33 @@ void update_z()
 	{
 		if (a[i].state)
 		{
-			drawAlpha(&ima_z_1[a[i].fps%20+1], a[i].x, a[i].line * 100 - 73);
+			if (!zombie_line[a[i].line])
+			{
+				zombie_line[a[i].line] = a[i].x;
+				zombie_line_num[a[i].line] = i;
+			}
+			if (a[i].x < zombie_line[a[i].line])
+			{
+				zombie_line[a[i].line] = a[i].x;
+				zombie_line_num[a[i].line] = i;
+			}
+			//zombie_line[a[i].line] = min(a[i].x, zombie_line[a[i].line]);
+			//更新这一列僵尸存在状态，供给豌豆生成
+			drawAlpha(&ima_z_1[a[i].f%20+1], a[i].x, a[i].line * 100 - 73);
 
-			if (!(fps % 100))
-				a[i].fps++;
-
-			if (!(fps % 100))
+			if (!(fps % 50))
+				a[i].f++;
+			if (!(fps % 50))
 				a[i].x -= 1;
-			if (a[i].x < 400)
+			if (a[i].x < 100)
 				a[i].state = 0;
+			if (a[i].hp < 0)
+			{
+				a[i].state = 0;   //后期考虑加死亡动画
+				zombie_line[a[i].line] = 0;
+
+			}
+				
 		}
 	}
 	//if (GetTickCount() - time_c>10)
@@ -262,6 +299,7 @@ void update_z()
 	//time_c= GetTickCount();
 	//Sleep(50);
 }
+
 void update_p()
 {
 	for (int i = 1; i <= 5; i++)
@@ -269,19 +307,76 @@ void update_p()
 		for (int j = 1; j <= 6; j++)
 		{
 			if (loca_p[i][j].ex)
+			{
 				drawAlpha(&ima_p_1, 185 + 80 * j, 100 * i);  //植物边界
+				if (loca_p[i][j].hp <= 0)
+				{
+					loca_p[i][j].ex = 0;
+				}
+				if (zombie_line[i])
+				if (!(fps % 100))
+				{
+					bullet_num++;
+					b[bullet_num].ex = 1;
+					b[bullet_num].line = i;
+					b[bullet_num].x = 225 + 80 * j;
+				}
+			}
 		}
 	}
+	update_shoot();
 	//update_p();
 	//update_z();
+	//drawAlpha(&ima_s_1, 100 * 2, 500);
+}
+
+void update_shoot()
+{
+	for (int i = bullet_num>300 ? bullet_num - 300 : 1; i <= bullet_num; i++)
+	{
+		
+		if (b[i].ex)
+		{
+			drawAlpha(&ima_s_1,b[i].x, 100 * b[i].line);  //子弹打印
+			b[i].x++;
+			if (b[i].x > 1000)
+			{
+				b[i].ex = 0;
+			}
+		}
+	}
+}
+
+void update_c()
+{
+	for (int i = bullet_num > 300 ? bullet_num - 300 : 1; i <= bullet_num; i++)
+	{
+		if (b[i].ex)
+		{
+			if (b[i].x -50 > zombie_line[b[i].line])
+			{
+				b[i].ex = 0;
+				a[zombie_line_num[b[i].line]].hp -= 20;
+			}
+		}
+	}
 }
 
 void initialize()
 {
 	z0 = { 0,900,100,10,1,0};
+	p0 = { 100,1,1 };
 	mou_p = 0;
-	srand(time(NULL));												//初始化随机种子
+	srand(time(NULL));												//初始化随机种
 	time_c = GetTickCount();
+
+	for (int ii = 1; ii <= 5; ii++)
+	{
+		loca_p[ii][1] = p0;
+		//loca_p[1][2] = p0;
+	}
+	//loca_p[3][4]= p0;
+	
 	//185 + 80 * j, 100 * i											//位置
 }
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
