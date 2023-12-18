@@ -1,6 +1,6 @@
 ﻿  Game_homework.cpp
-F:\2_1_code\homework\Game_homework.cpp(158,7): warning C4101: “name”: 未引用的局部变量
-F:\2_1_code\homework\Game_homework.cpp(370,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
-F:\2_1_code\homework\Game_homework.cpp(124): warning C4715: “legal_m_y”: 不是所有的控件路径都返回值
-F:\2_1_code\homework\Game_homework.cpp(111): warning C4715: “legal_m_x”: 不是所有的控件路径都返回值
+F:\2_1_code\homework\Game_homework.cpp(159,7): warning C4101: “name”: 未引用的局部变量
+F:\2_1_code\homework\Game_homework.cpp(424,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+F:\2_1_code\homework\Game_homework.cpp(112): warning C4715: “legal_m_x”: 不是所有的控件路径都返回值
+F:\2_1_code\homework\Game_homework.cpp(125): warning C4715: “legal_m_y”: 不是所有的控件路径都返回值
   Game_homework.vcxproj -> F:\2_1_code\homework\x64\Debug\Game_homework.exe

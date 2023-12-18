@@ -36,12 +36,13 @@ struct bullet {
 
 IMAGE ima_bg;									//背景
 IMAGE ima_p_1;							//植物：豌豆射手
-IMAGE ima_z_1[22];							//僵尸，normal
+IMAGE ima_z_1[22];							//僵尸，走
+IMAGE ima_z_2[22];							//僵尸，吃
 IMAGE ima_z_1_0;
 IMAGE ima_s_1;
 MOUSEMSG mou;
 bool mou_p;
-plant_place loca_p[6][7];
+plant_place loca_p[6][15];   //5行6列，前行后列
 int zombie_num;
 zombie a[10001];
 bullet b[100001];
@@ -167,7 +168,7 @@ void start_up()
 		//file_add[22] = i + '0';
 		//strcpy(file_add + 22, ".png");
 		//loadimage(&ima_z_1[i], (LPCTSTR)file_add);
-		loadimage(&ima_z_1[1], _T("res\\Zombies\\Zombie\\1.png"));
+		loadimage(&ima_z_1[1], _T("res\\Zombies\\Zombie\\1.png")); 
 		loadimage(&ima_z_1[2], _T("res\\Zombies\\Zombie\\2.png"));
 		loadimage(&ima_z_1[3], _T("res\\Zombies\\Zombie\\3.png"));
 		loadimage(&ima_z_1[4], _T("res\\Zombies\\Zombie\\4.png"));
@@ -187,6 +188,27 @@ void start_up()
 		loadimage(&ima_z_1[18], _T("res\\Zombies\\Zombie\\18.png"));
 		loadimage(&ima_z_1[19], _T("res\\Zombies\\Zombie\\19.png"));
 		loadimage(&ima_z_1[20], _T("res\\Zombies\\Zombie\\20.png"));
+
+		loadimage(&ima_z_2[1], _T("res\\zm_eat\\1.png"));
+		loadimage(&ima_z_2[2], _T("res\\zm_eat\\2.png"));
+		loadimage(&ima_z_2[3], _T("res\\zm_eat\\3.png"));
+		loadimage(&ima_z_2[4], _T("res\\zm_eat\\4.png"));
+		loadimage(&ima_z_2[5], _T("res\\zm_eat\\5.png"));
+		loadimage(&ima_z_2[6], _T("res\\zm_eat\\6.png"));
+		loadimage(&ima_z_2[7], _T("res\\zm_eat\\7.png"));
+		loadimage(&ima_z_2[8], _T("res\\zm_eat\\8.png"));
+		loadimage(&ima_z_2[9], _T("res\\zm_eat\\9.png"));
+		loadimage(&ima_z_2[10], _T("res\\zm_eat\\10.png"));
+		loadimage(&ima_z_2[11], _T("res\\zm_eat\\11.png"));
+		loadimage(&ima_z_2[12], _T("res\\zm_eat\\12.png"));
+		loadimage(&ima_z_2[13], _T("res\\zm_eat\\13.png"));
+		loadimage(&ima_z_2[14], _T("res\\zm_eat\\14.png"));
+		loadimage(&ima_z_2[15], _T("res\\zm_eat\\15.png"));
+		loadimage(&ima_z_2[16], _T("res\\zm_eat\\16.png"));
+		loadimage(&ima_z_2[17], _T("res\\zm_eat\\17.png"));
+		loadimage(&ima_z_2[18], _T("res\\zm_eat\\18.png"));
+		loadimage(&ima_z_2[19], _T("res\\zm_eat\\19.png"));
+		loadimage(&ima_z_2[20], _T("res\\zm_eat\\20.png"));
 	//	//sprintf_s(name, sizeof(name), "res\\Plants\\Peashooter\\%d.gif", i-1);
 	}
 	loadimage(&ima_s_1, _T("res\\bullets\\PeaNormal\\PeaNormal_0.png"));
@@ -277,19 +299,29 @@ void update_z()
 			}
 			//zombie_line[a[i].line] = min(a[i].x, zombie_line[a[i].line]);
 			//更新这一列僵尸存在状态，供给豌豆生成
-			drawAlpha(&ima_z_1[a[i].f%20+1], a[i].x, a[i].line * 100 - 73);
+
+			if (a[i].state==1)
+			{
+				//走
+				drawAlpha(&ima_z_1[a[i].f % 20 + 1], a[i].x, a[i].line * 100 - 73);
+				if (!(fps % 50))
+					a[i].x -= 2;
+			}
+			if (a[i].state == 2)
+			{
+				//吃
+				drawAlpha(&ima_z_2[a[i].f % 20 + 1], a[i].x, a[i].line * 100 - 73);
+				loca_p[a[i].line][(a[i].x - 120) / 80].hp -= 1;
+			}
 
 			if (!(fps % 50))
 				a[i].f++;
-			if (!(fps % 50))
-				a[i].x -= 1;
 			if (a[i].x < 100)
 				a[i].state = 0;
 			if (a[i].hp < 0)
 			{
 				a[i].state = 0;   //后期考虑加死亡动画
 				zombie_line[a[i].line] = 0;
-
 			}
 				
 		}
@@ -324,6 +356,15 @@ void update_p()
 			}
 		}
 	}
+	//for (int i = 1; i <= 5; i++)
+	//{
+	//	for (int j = 1; j <= 10; j++)
+	//	{
+	//		printf("%d ", loca_p[i][j].ex);
+	//	}
+	//	printf("\n");
+
+	//}
 	update_shoot();
 	//update_p();
 	//update_z();
@@ -360,19 +401,32 @@ void update_c()
 			}
 		}
 	}
+
+	for (int i = zombie_num; i >= 1; i--)
+	{
+		if (loca_p[a[i].line][(a[i].x-120) / 80].ex)
+		{
+			//printf("%d   %d  %d\n",  a[i].x, a[i].x / 80, loca_p[a[i].line][(a[i].x) / 80].ex);
+			a[i].state = 2;   
+		}
+		else {
+			a[i].state = 1;
+		}
+	}
+
 }
 
 void initialize()
 {
-	z0 = { 0,900,100,10,1,0};
-	p0 = { 100,1,1 };
+	z0 = { 0,900,100000,10,1,0};
+	p0 = { 2000,1,1 };
 	mou_p = 0;
 	srand(time(NULL));												//初始化随机种
 	time_c = GetTickCount();
 
-	for (int ii = 1; ii <= 5; ii++)
+	for (int ii = 1; ii <= 10; ii++)
 	{
-		loca_p[ii][1] = p0;
+		loca_p[rand()%6][rand()%7] = p0;
 		//loca_p[1][2] = p0;
 	}
 	//loca_p[3][4]= p0;
