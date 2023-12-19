@@ -8,7 +8,7 @@
 #include<cstring>
 #define	 W	1200
 #define  H  600
-
+using namespace std;
 //struct mou_m {
 //	bool flag;
 //};
@@ -34,6 +34,7 @@ struct bullet {
 	bool ex;
 };
 
+FILE* stream1;
 IMAGE ima_bg;									//背景
 IMAGE ima_p_1;							//植物：豌豆射手
 IMAGE ima_z_1[22];							//僵尸，走
@@ -42,6 +43,7 @@ IMAGE ima_z_1_0;
 IMAGE ima_s_1;
 MOUSEMSG mou;
 bool mou_p;
+bool close;
 plant_place loca_p[6][15];   //5行6列，前行后列
 int zombie_num;
 zombie a[10001];
@@ -128,11 +130,16 @@ void update_shoot();
 
 bool judge(int location_judge)
 {
-	//rectangle(1100, 250, 1170, 350);  //  1: 拖动判定框
+	//rectangle(1100, 150, 1170, 250);  //  1: 拖动判定框
 	switch (location_judge)
 	{
 	case 1:
 		if (mou.x <= 1170 && mou.y <= 350 && mou.x >= 1100 && mou.y >= 250)
+			return 1;
+		else
+			return 0;
+	case 2: 
+		if (mou.x <= 1170 && mou.y <= 250 && mou.x >= 1100 && mou.y >= 150)   //调整
 			return 1;
 		else
 			return 0;
@@ -151,6 +158,8 @@ int main()
 		update_with_input();
 		update_without();
 		FlushBatchDraw();											//双缓冲
+		if (close)
+			return 0;
 	}
 	return 0;
 }
@@ -221,6 +230,7 @@ void start_up()
 void update_with_input()
 {
 	get_input();
+	
 	if (mou.uMsg == WM_LBUTTONDOWN)
 	{
 		if (judge(1))			//拖动
@@ -229,7 +239,26 @@ void update_with_input()
 		}
 		if (judge(2))           //暂停，存档
 		{
-			;
+			freopen_s(&stream1,"f.txt", "w", stdout);
+			int symbol;
+			cout << 1<<endl;
+			{
+				cout << zombie_num << endl;
+				for (int i = 1; i <= zombie_num; i++)
+				{
+					cout<< a[i].line <<" " << a[i].x << " " << a[i].hp << " " << a[i].att << " " << a[i].state << " " << a[i].f<<endl;
+				}
+				for (int i = 1; i <= 5; i++)
+				{
+					for (int j = 1; j <= 6; j++)
+					{
+						cout << loca_p[i][j].cata << " " << loca_p[i][j].ex << " " << loca_p[i][j].hp << endl;;
+					}
+				}
+			}
+			fclose(stdout);
+			close = 1;
+			return;
 		}
 	}
 	if (mou.uMsg == WM_LBUTTONUP)
@@ -257,7 +286,7 @@ void update_with_input()
 		//}
 		//Sleep(5);
 	}
-	rectangle(1100, 250, 1170, 350);
+
 	drawAlpha(&ima_z_1_0, 1000, 230);
 	if (mou_p == 1)
 		drawAlpha(&ima_z_1_0, legal_m_x(mou.x) - 90, legal_m_y(mou.y) - 80);
@@ -280,7 +309,9 @@ void update_without()
 }
 void update_z()
 {
+	//rectangle(1100, 250, 1170, 350);
 	rectangle(1100, 250, 1170, 350);
+	rectangle(1100, 150, 1170, 250);
 	if (mou_p == 1)
 		drawAlpha(&ima_z_1_0, legal_m_x(mou.x) - 90, legal_m_y(mou.y) - 80);
 	for (int i = 1; i <= zombie_num; i++)
@@ -418,17 +449,39 @@ void update_c()
 
 void initialize()
 {
-	z0 = { 0,900,100000,10,1,0};
+	freopen_s(&stream1,"f.txt", "r",stdin);
+	z0 = { 0,900,1000,10,1,0 };
 	p0 = { 2000,1,1 };
 	mou_p = 0;
 	srand(time(NULL));												//初始化随机种
 	time_c = GetTickCount();
-
-	for (int ii = 1; ii <= 10; ii++)
+	int symbol;
+	cin >> symbol;
+	if (symbol)
 	{
-		loca_p[rand()%6][rand()%7] = p0;
-		//loca_p[1][2] = p0;
+		cin >> zombie_num;
+		for (int i = 1; i <= zombie_num; i++)
+		{
+			cin >> a[i].line >> a[i].x >> a[i].hp >> a[i].att >> a[i].state >> a[i].f;
+		}
+		for (int i = 1; i <= 5; i++)
+		{
+			for (int j = 1; j <= 6; j++)
+			{
+				cin >> loca_p[i][j].cata >> loca_p[i][j].ex >> loca_p[i][j].hp;
+			}
+		}
 	}
+	else {
+		for (int ii = 1; ii <= 10; ii++)
+		{
+			loca_p[rand() % 6][rand() % 7] = p0;
+			//loca_p[1][2] = p0;
+		}
+	}
+	fclose(stdin);
+
+
 	//loca_p[3][4]= p0;
 	
 	//185 + 80 * j, 100 * i											//位置
